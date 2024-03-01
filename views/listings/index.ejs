@@ -7,6 +7,7 @@
 </head>
 <body>
     <h1>All Listings</h1>
+    <a href="/listings/new">Add Listing</a>
     <ul>
         <% for (listings of allListings){ %>
             <li><a href="/listings/<%= listings._id %>"><%= listings.title %></a></li>
