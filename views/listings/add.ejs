@@ -1,25 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Add Listings</title>
-</head>
-<body>
+  </head>
+  <body>
     <form method="POST" action="/listings/create">
-        <input name="listing[title]" type="text" placeholder="title">
-        <br><br>
-        <input name="listing[description]" type="text" placeholder="description">
-        <br><br>
-        <input name="listing[image]" type="text" placeholder="image">
-        <br><br>
-        <input name="listing[price]" type="number" placeholder="price">
-        <br><br>
-        <input name="listing[location]" type="text" placeholder="location">
-        <br><br>
-        <input name="listing[country]" type="text" placeholder="country">
-        <br><br>
-        <button>Submit</button>
+      <input name="listing[title]" type="text" placeholder="title" />
+      <br /><br />
+      <input
+        name="listing[description]"
+        type="text"
+        placeholder="description"
+      />
+      <br /><br />
+      <input name="listing[image]" type="text" placeholder="image" />
+      <br /><br />
+      <input name="listing[price]" type="number" placeholder="price" />
+      <br /><br />
+      <input name="listing[location]" type="text" placeholder="location" />
+      <br /><br />
+      <input name="listing[country]" type="text" placeholder="country" />
+      <br /><br />
+      <button>Submit</button>
     </form>
-</body>
+  </body>
 </html>

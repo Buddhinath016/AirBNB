@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wanderlust</title>
-</head>
-<body>
+  </head>
+  <body>
     <h1>All Listings</h1>
     <a href="/listings/new">Add Listing</a>
     <ul>
-        <% for (listings of allListings){ %>
-            <li><a href="/listings/<%= listings._id %>"><%= listings.title %></a></li>
-        <% } %>
+      <% for (listings of allListings){ %>
+      <li><a href="/listings/<%= listings._id %>"><%= listings.title %></a></li>
+      <% } %>
     </ul>
-</body>
+  </body>
 </html>
