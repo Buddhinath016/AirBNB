@@ -33,6 +33,9 @@ app.use(methodOverride("_method"));
 const ejsMate = require("ejs-mate");
 app.engine('ejs',ejsMate);
 
+//use static files
+app.use(express.static(path.join(__dirname,"/public")));
+
 //extract parameters
 app.use(express.urlencoded({ extended: true }));
 
