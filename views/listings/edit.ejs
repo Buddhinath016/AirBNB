@@ -6,6 +6,8 @@
         <form
           method="POST"
           action="/listings/<%=listingData._id%>/update?_method=PUT"
+          class="needs-validation"
+          novalidate
         >
           <div class="mb-3">
             <label for="title" class="form-label">Title</label>
@@ -13,7 +15,9 @@
               name="listing[title]"
               type="text"
               value="<%=listingData.title %>" 
-              class="form-control"/>
+              class="form-control"
+              required
+            />
           </div>
 
           <div class="mb-3">
@@ -23,6 +27,7 @@
               type="text"
               value="<%=listingData.description %>"
               class="form-control"
+              required
             />
           </div>
 
@@ -32,6 +37,7 @@
               type="text"
               value="<%=listingData.image %>" 
               class="form-control"
+              required
             />
           </div>
 
@@ -43,6 +49,7 @@
                 type="number"
                 value="<%=listingData.price %>" 
                 class="form-control"
+                required
               />
             </div>
 
@@ -53,6 +60,7 @@
                 type="text"
                 value="<%=listingData.country %>" 
                 class="form-control"
+                required
               />
             </div>
           </div>
@@ -64,6 +72,7 @@
               type="text"
               value="<%=listingData.location %>" 
               class="form-control"
+              required
             />
           </div>
           </br>
