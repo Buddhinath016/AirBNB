@@ -39,15 +39,21 @@ app.use(express.static(path.join(__dirname,"/public")));
 //extract parameters
 app.use(express.urlencoded({ extended: true }));
 
+// Error Handling
+const wrapAsync = require("./utils/wrapAsync.js");
+
+// Custom Error
+const ExpressError = require("./utils/ExpressError.js");
+
 app.get("/", (req, res) => {
   res.send("Root is being called !!");
 });
 
 //all listings
-app.get("/listings", async (req, res) => {
+app.get("/listings", wrapAsync(async (req, res) => {
   let allListings = await Listing.find({});
   res.render("listings/index.ejs", { allListings });
-});
+}));
 
 //new listing route
 app.get("/listings/new", (req, res) => {
@@ -55,39 +61,53 @@ app.get("/listings/new", (req, res) => {
 });
 
 //individual listing
-app.get("/listings/:id", async (req, res) => {
+app.get("/listings/:id", wrapAsync(async (req, res) => {
   let { id } = req.params;
   let listing = await Listing.findById(id);
   res.render("listings/show.ejs", { listing });
-});
+}));
 
 //edit route
-app.get("/listings/:id/edit", async (req, res) => {
+app.get("/listings/:id/edit", wrapAsync(async (req, res) => {
   let { id } = req.params;
   let listingData = await Listing.findById(id);
   res.render("listings/edit.ejs", { listingData });
-});
+}));
 
 //create new listing
-app.post("/listings/create", async (req, res) => {
+app.post("/listings/create", wrapAsync(async (req, res,next) => {
   // let data = req.body.listing;
-  const newListing = new Listing(req.body.listing);
-  await newListing.save();
-  res.redirect("/listings");
-});
+  if(!req.body.listing){
+    throw new ExpressError(404,"Bad request from Client");
+  }
+    const newListing = new Listing(req.body.listing);
+    await newListing.save();
+    res.redirect("/listings");
+}));
 
 //update existing listing
-app.put("/listings/:id/update", async (req, res) => {
+app.put("/listings/:id/update", wrapAsync(async (req, res) => {
   let { id } = req.params;
   await Listing.findByIdAndUpdate(id, { ...req.body.listing });
   res.redirect(`/listings/${id}`);
-});
+}));
 
 //delete route
-app.delete("/listings/:id/delete", async (req, res) => {
+app.delete("/listings/:id/delete", wrapAsync(async (req, res) => {
   let { id } = req.params;
   await Listing.findByIdAndDelete(id);
   res.redirect("/listings");
+}));
+
+//Handling invalid route request
+app.all("*",(req,res,next)=>{
+  next(new ExpressError(404, "Page Not Found"));
+});
+
+// Error Handling middleware
+app.use((err, req, res, next) => {
+  let { statusCode=500, message="Something went wrong" } = err;
+  res.status(statusCode).send(message);
 });
 
 app.listen(6969, () => {
