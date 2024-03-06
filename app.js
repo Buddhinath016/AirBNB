@@ -31,10 +31,10 @@ app.use(methodOverride("_method"));
 //requiring ejs-mate
 //used to write same piece of code to many place
 const ejsMate = require("ejs-mate");
-app.engine('ejs',ejsMate);
+app.engine("ejs", ejsMate);
 
 //use static files
-app.use(express.static(path.join(__dirname,"/public")));
+app.use(express.static(path.join(__dirname, "/public")));
 
 //extract parameters
 app.use(express.urlencoded({ extended: true }));
@@ -45,15 +45,29 @@ const wrapAsync = require("./utils/wrapAsync.js");
 // Custom Error
 const ExpressError = require("./utils/ExpressError.js");
 
+//Server side validation
+const { listingSchema } = require("./schema.js");
+const validateListing = (req, res, next) => {
+  let { error } = listingSchema.validate(req.body);
+  if (error) {
+    throw new ExpressError(404, error);
+  } else {
+    next();
+  }
+};
+
 app.get("/", (req, res) => {
   res.send("Root is being called !!");
 });
 
 //all listings
-app.get("/listings", wrapAsync(async (req, res) => {
-  let allListings = await Listing.find({});
-  res.render("listings/index.ejs", { allListings });
-}));
+app.get(
+  "/listings",
+  wrapAsync(async (req, res) => {
+    let allListings = await Listing.find({});
+    res.render("listings/index.ejs", { allListings });
+  })
+);
 
 //new listing route
 app.get("/listings/new", (req, res) => {
@@ -61,53 +75,68 @@ app.get("/listings/new", (req, res) => {
 });
 
 //individual listing
-app.get("/listings/:id", wrapAsync(async (req, res) => {
-  let { id } = req.params;
-  let listing = await Listing.findById(id);
-  res.render("listings/show.ejs", { listing });
-}));
+app.get(
+  "/listings/:id",
+  wrapAsync(async (req, res) => {
+    let { id } = req.params;
+    let listing = await Listing.findById(id);
+    res.render("listings/show.ejs", { listing });
+  })
+);
 
 //edit route
-app.get("/listings/:id/edit", wrapAsync(async (req, res) => {
-  let { id } = req.params;
-  let listingData = await Listing.findById(id);
-  res.render("listings/edit.ejs", { listingData });
-}));
+app.get(
+  "/listings/:id/edit",
+  wrapAsync(async (req, res) => {
+    let { id } = req.params;
+    let listingData = await Listing.findById(id);
+    res.render("listings/edit.ejs", { listingData });
+  })
+);
 
 //create new listing
-app.post("/listings/create", wrapAsync(async (req, res,next) => {
-  // let data = req.body.listing;
-  if(!req.body.listing){
-    throw new ExpressError(404,"Bad request from Client");
-  }
+app.post(
+  "/listings/create",
+  validateListing,
+  wrapAsync(async (req, res, next) => {
+    // let data = req.body.listing;
     const newListing = new Listing(req.body.listing);
     await newListing.save();
     res.redirect("/listings");
-}));
+  })
+);
 
 //update existing listing
-app.put("/listings/:id/update", wrapAsync(async (req, res) => {
-  let { id } = req.params;
-  await Listing.findByIdAndUpdate(id, { ...req.body.listing });
-  res.redirect(`/listings/${id}`);
-}));
+app.put(
+  "/listings/:id/update",
+  validateListing,
+  wrapAsync(async (req, res) => {
+    let { id } = req.params;
+    await Listing.findByIdAndUpdate(id, { ...req.body.listing });
+    res.redirect(`/listings/${id}`);
+  })
+);
 
 //delete route
-app.delete("/listings/:id/delete", wrapAsync(async (req, res) => {
-  let { id } = req.params;
-  await Listing.findByIdAndDelete(id);
-  res.redirect("/listings");
-}));
+app.delete(
+  "/listings/:id/delete",
+  wrapAsync(async (req, res) => {
+    let { id } = req.params;
+    await Listing.findByIdAndDelete(id);
+    res.redirect("/listings");
+  })
+);
 
 //Handling invalid route request
-app.all("*",(req,res,next)=>{
+app.all("*", (req, res, next) => {
   next(new ExpressError(404, "Page Not Found"));
 });
 
 // Error Handling middleware
 app.use((err, req, res, next) => {
-  let { statusCode=500, message="Something went wrong" } = err;
-  res.status(statusCode).send(message);
+  let { statusCode = 500, message = "Something went wrong" } = err;
+  // res.status(statusCode).send(message);
+  res.render("error.ejs", { message });
 });
 
 app.listen(6969, () => {
