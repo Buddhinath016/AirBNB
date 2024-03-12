@@ -7,6 +7,9 @@ const mongoose = require("mongoose");
 const mongoURL = "mongodb://127.0.0.1:27017/wanderlust";
 const Listing = require("./models/listing.js");
 
+//Review Schema
+const Review = require("./models/review.js")
+
 main()
   .then(() => {
     console.log("Connected to MONGODB Wanderlust");
@@ -126,6 +129,20 @@ app.delete(
     res.redirect("/listings");
   })
 );
+
+//Review route 
+app.post(
+  "/listings/:id/reviews",
+  wrapAsync(async(req,res)=>{
+    let listing = await Listing.findById(req.params.id);
+    let newReview = new Review(req.body.review);
+
+    listing.reviews.push(newReview); 
+    await newReview.save();
+    await listing.save();
+
+    res.redirect(`/listings/${listing._id}`);
+}));
 
 //Handling invalid route request
 app.all("*", (req, res, next) => {
