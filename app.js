@@ -10,6 +10,9 @@ const Listing = require("./models/listing.js");
 //Review Schema
 const Review = require("./models/review.js")
 
+//Requiring from Router
+const listings = require("./routes/listing.js");
+
 main()
   .then(() => {
     console.log("Connected to MONGODB Wanderlust");
@@ -48,13 +51,15 @@ const wrapAsync = require("./utils/wrapAsync.js");
 // Custom Error
 const ExpressError = require("./utils/ExpressError.js");
 
-//Server side validation
-const { listingSchema } = require("./schema.js");
-const validateListing = (req, res, next) => {
-  let { error } = listingSchema.validate(req.body);
-  if (error) {
-    throw new ExpressError(404, error);
-  } else {
+//Server side validation for listing
+const { listingSchema, reviewSchema } = require("./schema.js");
+
+//Server side validation for review
+const validateReview = (req,res,next)=>{
+  let {error} = reviewSchema.validate(req.body);
+  if(error){
+    throw new ExpressError(404,error);
+  }else{
     next();
   }
 };
@@ -63,76 +68,13 @@ app.get("/", (req, res) => {
   res.send("Root is being called !!");
 });
 
-//all listings
-app.get(
-  "/listings",
-  wrapAsync(async (req, res) => {
-    let allListings = await Listing.find({});
-    res.render("listings/index.ejs", { allListings });
-  })
-);
-
-//new listing route
-app.get("/listings/new", (req, res) => {
-  res.render("listings/add.ejs");
-});
-
-//individual listing
-app.get(
-  "/listings/:id",
-  wrapAsync(async (req, res) => {
-    let { id } = req.params;
-    let listing = await Listing.findById(id);
-    res.render("listings/show.ejs", { listing });
-  })
-);
-
-//edit route
-app.get(
-  "/listings/:id/edit",
-  wrapAsync(async (req, res) => {
-    let { id } = req.params;
-    let listingData = await Listing.findById(id);
-    res.render("listings/edit.ejs", { listingData });
-  })
-);
-
-//create new listing
-app.post(
-  "/listings/create",
-  validateListing,
-  wrapAsync(async (req, res, next) => {
-    // let data = req.body.listing;
-    const newListing = new Listing(req.body.listing);
-    await newListing.save();
-    res.redirect("/listings");
-  })
-);
-
-//update existing listing
-app.put(
-  "/listings/:id/update",
-  validateListing,
-  wrapAsync(async (req, res) => {
-    let { id } = req.params;
-    await Listing.findByIdAndUpdate(id, { ...req.body.listing });
-    res.redirect(`/listings/${id}`);
-  })
-);
-
-//delete route
-app.delete(
-  "/listings/:id/delete",
-  wrapAsync(async (req, res) => {
-    let { id } = req.params;
-    await Listing.findByIdAndDelete(id);
-    res.redirect("/listings");
-  })
-);
+//Router Route 
+app.use("/listings", listings);
 
 //Review route 
 app.post(
   "/listings/:id/reviews",
+  validateReview,
   wrapAsync(async(req,res)=>{
     let listing = await Listing.findById(req.params.id);
     let newReview = new Review(req.body.review);
@@ -142,6 +84,16 @@ app.post(
     await listing.save();
 
     res.redirect(`/listings/${listing._id}`);
+}));
+
+//Delete review route
+app.delete("/listings/:id/reviews/:reviewId",
+wrapAsync(async(req,res)=>{
+  let { id, reviewId } = req.params;
+  await Listing.findByIdAndUpdate(id, {$pull : {reviews : reviewId}});
+  await Review.findByIdAndDelete(reviewId);
+
+  res.redirect(`/listings/${id}`);
 }));
 
 //Handling invalid route request
