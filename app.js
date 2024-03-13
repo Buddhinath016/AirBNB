@@ -5,13 +5,10 @@ const app = express();
 //mongoose setup
 const mongoose = require("mongoose");
 const mongoURL = "mongodb://127.0.0.1:27017/wanderlust";
-const Listing = require("./models/listing.js");
-
-//Review Schema
-const Review = require("./models/review.js")
 
 //Requiring from Router
 const listings = require("./routes/listing.js");
+const reviews = require("./routes/review.js");
 
 main()
   .then(() => {
@@ -45,24 +42,8 @@ app.use(express.static(path.join(__dirname, "/public")));
 //extract parameters
 app.use(express.urlencoded({ extended: true }));
 
-// Error Handling
-const wrapAsync = require("./utils/wrapAsync.js");
-
 // Custom Error
 const ExpressError = require("./utils/ExpressError.js");
-
-//Server side validation for listing
-const { listingSchema, reviewSchema } = require("./schema.js");
-
-//Server side validation for review
-const validateReview = (req,res,next)=>{
-  let {error} = reviewSchema.validate(req.body);
-  if(error){
-    throw new ExpressError(404,error);
-  }else{
-    next();
-  }
-};
 
 app.get("/", (req, res) => {
   res.send("Root is being called !!");
@@ -71,30 +52,8 @@ app.get("/", (req, res) => {
 //Router Route 
 app.use("/listings", listings);
 
-//Review route 
-app.post(
-  "/listings/:id/reviews",
-  validateReview,
-  wrapAsync(async(req,res)=>{
-    let listing = await Listing.findById(req.params.id);
-    let newReview = new Review(req.body.review);
-
-    listing.reviews.push(newReview); 
-    await newReview.save();
-    await listing.save();
-
-    res.redirect(`/listings/${listing._id}`);
-}));
-
-//Delete review route
-app.delete("/listings/:id/reviews/:reviewId",
-wrapAsync(async(req,res)=>{
-  let { id, reviewId } = req.params;
-  await Listing.findByIdAndUpdate(id, {$pull : {reviews : reviewId}});
-  await Review.findByIdAndDelete(reviewId);
-
-  res.redirect(`/listings/${id}`);
-}));
+//to pass the :id to the review route, we have to use mergeParams
+app.use("/listings/:id/reviews", reviews);
 
 //Handling invalid route request
 app.all("*", (req, res, next) => {
@@ -104,7 +63,6 @@ app.all("*", (req, res, next) => {
 // Error Handling middleware
 app.use((err, req, res, next) => {
   let { statusCode = 500, message = "Something went wrong" } = err;
-  // res.status(statusCode).send(message);
   res.render("error.ejs", { message });
 });
 
